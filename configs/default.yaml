@@ -1,0 +1,64 @@
+# Marine Accident Risk Prediction — default config
+# Demo bbox = 부산 인근 (격자 demo 단위)
+
+bbox:
+  # lat min/max, lon min/max — README의 격자(level4)는 col이 lat=og_lon, lon=og_lat 이라
+  # 본 config는 실세계 의미로 lat/lon으로 통일
+  lat_min: 34.50
+  lat_max: 35.50
+  lon_min: 128.50
+  lon_max: 129.50
+
+time_window:
+  start: "2023-01-01"
+  end:   "2024-12-31"
+  freq:  "1h"
+
+negative_sampling:
+  # 격자×시간 negative samples per positive
+  ratio: 5
+  random_seed: 42
+
+features:
+  weather_lookback_hours: 3
+  weather_max_distance_km: 60
+  ship_use_top_k: 10
+
+model:
+  type: "lightgbm"
+  params:
+    objective: "binary"
+    metric: "auc"
+    num_leaves: 31
+    learning_rate: 0.05
+    feature_fraction: 0.9
+    bagging_fraction: 0.8
+    bagging_freq: 5
+    n_estimators: 400
+    min_data_in_leaf: 50
+  cv:
+    n_splits: 5
+    early_stopping_rounds: 30
+
+paths:
+  accidents_xlsx: "data/raw/accidents.xlsx"
+  grid_csv:      "data/raw/level4.csv"
+  weather_dir:   "data/processed/weather/"
+  dataset:       "data/processed/dataset.parquet"
+  model:         "models/lgbm.txt"
+  shap_cache:    "data/processed/shap.parquet"
+
+api:
+  nmpnt:
+    base_url: "http://marineweather.nmpnt.go.kr:8001"
+    service_key_env: "NMPNT_SERVICE_KEY"
+    default_dataType: 1
+  data_go_kr:
+    base_url: "https://apis.data.go.kr/1192136"
+    service_key_env: "DATA_GO_KR_SERVICE_KEY"
+    seafog_path: "/surveySeafog/GetSurveySeafogApiService"
+
+dashboard:
+  default_hour: 14
+  cell_alpha_min: 0.1
+  cell_alpha_max: 0.9

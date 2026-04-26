@@ -67,4 +67,4 @@ streamlit run src/marine_accident_risk/dashboard/app.py
 
 ## 공개 범위
 
-공개 저장소에는 재현 가능한 코드 흐름만 남겼습니다. 원본 데이터, 전처리 산출물, 학습된 모델, SHAP cache, private project asset은 포함하지 않습니다.
+원본 데이터, 전처리 산출물, 학습된 모델, SHAP cache는 포함하지 않습니다.

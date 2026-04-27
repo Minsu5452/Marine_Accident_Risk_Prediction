@@ -84,6 +84,24 @@ python scripts/run_threshold_analysis.py --config configs/default.yaml \
     --cost-fn 5 --cost-fp 1
 ```
 
+## 시계열 드리프트 진단
+
+배포된 모델이 시간에 따라 성능을 잃지 않는지 확인하기 위해, 슬라이딩 윈도우 학습/평가(학습 6개월 → 평가 1개월, step 1개월)를 데이터셋의 negative-sampling 구간(2023-01 ~ 2024-12)에 적용했습니다. 평가 윈도우 18개의 결과는 `reports/drift/` 에 정리됩니다 (`drift_table.csv`, `drift_curve.png`).
+
+| 지표 | 평균 | 표준편차 | 최소 | 최대 |
+| --- | --- | --- | --- | --- |
+| AUC | 0.951 | 0.014 | 0.921 | 0.966 |
+| PR-AUC | 0.527 | 0.117 | 0.274 | 0.652 |
+
+AUC 는 18개 윈도우 전반에서 0.92~0.97 사이로 안정적이지만, PR-AUC 는 0.27~0.65 로 변동 폭이 커서 양성 비율이 낮은 월(예: 2023-09, 2023-11~12)에 모델이 상대적으로 약해지는 경향을 확인했습니다. 이는 모델 자체의 분리 성능보다는 사고 발생 빈도 자체의 계절성 또는 양성 분포 변화에서 기인한다고 보고, 실제 운영에서는 PR-AUC 와 alarm rate 를 함께 모니터링해 임계값을 조정하는 것이 적절하다고 가정합니다. 본 데모 데이터셋은 negative sampling 이 2023~2024 구간으로 한정되어 있어 더 긴 시계열 진단은 데이터를 확장한 환경에서 동일 코드로 수행 가능합니다.
+
+실행:
+
+```bash
+python scripts/run_drift_analysis.py --config configs/default.yaml \
+    --start 2023-01-01 --train-months 6 --eval-months 1 --step-months 1
+```
+
 ## 공개 범위
 
 원본 데이터, 전처리 산출물, 학습된 모델, SHAP cache는 포함하지 않습니다.

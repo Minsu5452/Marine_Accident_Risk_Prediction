@@ -102,6 +102,26 @@ python scripts/run_drift_analysis.py --config configs/default.yaml \
     --start 2023-01-01 --train-months 6 --eval-months 1 --step-months 1
 ```
 
+## Negative-sampling ratio ablation
+
+데이터 불균형 대응으로 negative 샘플링 비율을 어떻게 잡을지가 모델 성능 해석에 직접 영향을 주기 때문에, `negative_sampling.ratio` 를 1, 3, 5, 10 으로 바꿔 dataset 을 다시 빌드하고 동일 feature / hyperparam 으로 5-fold OOF 를 비교했습니다. 결과는 `reports/ablation/` 에 정리됩니다 (`negative_ratio_table.csv`).
+
+| ratio | n_pos | n_neg | positive rate | OOF AUC | OOF PR-AUC |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 2,295 | 2,295 | 0.500 | 0.9324 | 0.9101 |
+| 3 | 2,295 | 6,885 | 0.250 | 0.9427 | 0.8145 |
+| 5 | 2,295 | 11,475 | 0.167 | 0.9460 | 0.7424 |
+| 10 | 2,295 | 22,950 | 0.091 | 0.9511 | 0.6296 |
+
+ratio 가 커질수록 AUC 는 미세하게 상승하지만 PR-AUC 는 빠르게 하락합니다. PR-AUC 는 베이스 양성 비율의 영향을 받기 때문에 절대 비교는 어렵고, AUC 기준으로 보면 ratio 5~10 사이에서 추가 이득이 작아집니다. 운영 환경에서는 격자×시간 의 실제 양성 비율(매우 낮음)에 가까운 ratio 를 잡되 학습 안정성을 위해 ratio=5 를 기본값으로 둔다고 정리했고, 더 보수적인 alarm rate 가 필요한 경우 ratio=10 을 함께 비교하는 것이 적절하다고 판단합니다.
+
+실행:
+
+```bash
+python scripts/run_negative_ratio_ablation.py --config configs/default.yaml \
+    --ratios 1 3 5 10
+```
+
 ## 공개 범위
 
 원본 데이터, 전처리 산출물, 학습된 모델, SHAP cache는 포함하지 않습니다.
